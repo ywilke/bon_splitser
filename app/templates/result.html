@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if error %}
+<div class="container-md">
+	<br>
+	<div class="bs-component">
+		<div class="alert alert-dismissible alert-danger">
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			<strong>Iets ging fout:</strong> {{ error }}
+		</div>
+	</div>
+</div>
+{% endif %}
+<br>
+{{ result_html|safe }}
+
+{% endblock content %}

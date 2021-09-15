@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class="container">
+		{% if error %}
+		<br>
+		<div class="alert alert-dismissible alert-danger">
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			<strong>Iets ging fout:</strong> {{ error }}
+		</div>
+		{% endif %}
+		<form action="" method="post" enctype=multipart/form-data>
+			<div class="form-group">
+				<div class="row">
+					<div class="col-md-3">
+						<label for="file" class="form-label mt-4">Upload bonnetje (.pdf)</label>
+						<input class="form-control" type="file" name="file" id="file" accept=".pdf">
+					</div>
+					<div class="col-md-2">
+						<label for="supermarket" class="form-label mt-4">Supermarkt</label>
+						<select class="form-select" name="supermarket" id="supermarket">
+							<option selected value="AH">Albert Heijn</option>
+						</select>
+					</div>
+					<div class="col-md-2">
+						<br><br>
+						<button type="submit" class="btn btn-primary">Splitsen</button>
+					</div>
+				</div>
+			</div>
+			<div class="form-group" id="user_forms">
+				<label for="user_1" class="form-label mt-4">Deelnemers (Gebruik korte namen)</label>
+				<input type="text" class="form-control mt-2" size="16" style="width:auto" placeholder="Deelnemer 1" name="users[]" id="user_1">
+				<input type="text" class="form-control my-3" size="16" style="width:auto" placeholder="Deelnemer 2" name="users[]">
+			</div>
+			<button type="button" class="btn btn-secondary" onclick="addInput()">Nieuwe deelnemer</button>
+			<br><br>
+		</form>
+	</div>
+{% endblock content %}

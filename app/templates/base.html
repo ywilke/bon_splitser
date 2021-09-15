@@ -1,0 +1,40 @@
+{% extends "bootstrap/base.html" %}
+
+{% block styles %}
+	<link rel="stylesheet" href="https://bootswatch.com/5/flatly/bootstrap.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js"></script>
+	<script src="{{url_for('static', filename='custom.js')}}"></script>
+{% endblock styles %}
+
+{% block title %}
+	{% if title %}{{ title }} | Bon Splitser{% else %}Bon Splitser{% endif %}
+{% endblock title %}
+
+{% block navbar %}
+<div class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+	<a href="/Bon_Splitser" class="navbar-brand">Bon Splitser</a>
+	<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+	  <span class="navbar-toggler-icon"></span>
+	</button>
+	<div class="collapse navbar-collapse" id="navbarResponsive">
+	  <ul class="navbar-nav">
+		  <li class="nav-item">
+              <a class="nav-link" href="/">Nieuw bonnetje</a>
+            </li>
+	  </ul>
+	<ul class="navbar-nav ms-md-auto">
+		<li class="nav-item">
+		  <a target="_blank" rel="noopener" class="nav-link" href="https://github.com/ywilke/bon_splitser/"><i class="fa fa-github"></i> GitHub</a>
+		</li>
+	  </ul>
+	</div>
+  </div>
+</div>
+{% endblock navbar %}
+
+{% block content %}
+
+{% endblock content %}
+

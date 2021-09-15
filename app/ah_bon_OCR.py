@@ -1,27 +1,28 @@
-import fitz
+import decimal
 import io
-import PIL.Image as Image
+import re
+
+import cv2
+import fitz
 import numpy as np
 import pandas as pd
-import cv2
+import PIL.Image as Image
 import pytesseract
-import re
-import decimal
 
 
 class Receipt:
-    subtotal = 0
-    subtotal_conf = None
-    bonus = 0
-    bonus_conf = None
-    total = 0
-    total_conf = None
-    items = []
-    bonus_items = []
-
     def __init__(self, supermarket, participants):
         self.supermarket = supermarket
         self.participants = participants
+        self.subtotal = 0
+        self.subtotal_conf = None
+        self.bonus = 0
+        self.bonus_conf = None
+        self.total = 0
+        self.total_conf = None
+        self.items = []
+        self.bonus_items = []
+        self.verify = {}
 
     def add_item(self, price, price_conf, bonus, item_text):
         """Add item to receipt."""
@@ -44,7 +45,7 @@ class Receipt:
         subtotal = self.items["price"].sum() == self.subtotal
         if len(self.bonus_items) > 0:
             bonus = self.bonus_items["price"].sum() == self.bonus
-        else:
+        else:  # No bonus items, always correct
             bonus = True
         total = (self.subtotal - self.bonus) == self.total
         totals = {"subtotal": subtotal, "bonus": bonus, "total": total}
@@ -52,13 +53,19 @@ class Receipt:
         if sum(totals.values()) == len(totals):
             print("All items and totals add up.")
         else:
-            for key, correct in totals:
+            print(f"Totals do not add up: {totals}")  # TODO log this
+            for key, correct in totals.items():
                 if not correct:
                     print(f"{key} does not add up!")
 
 
 def img_from_pdf(pdf):
-    doc = fitz.open(pdf)
+    """Extract image from the pdf."""
+    if type(pdf) is bytes:  # When receiving pdf as bytes from web app
+        doc = fitz.open("input_pdf", pdf)
+    else:  # Receive filepath of pdf
+        doc = fitz.open(pdf)
+
     xref = doc.getPageImageList(0)[0][0]  # Locate xref of first image in first page
     img_data = doc.extract_image(xref)
     image = Image.open(io.BytesIO(img_data["image"]))
@@ -69,6 +76,7 @@ def img_from_pdf(pdf):
 
 
 def receipt_ocr(image):
+    """Perform OCR on the receipt image, return dataframe."""
     ocr_out = pytesseract.image_to_data(image, config="--psm 6", lang="nld", output_type=pytesseract.Output.DATAFRAME)
     df = ocr_out[["page_num", "block_num", "par_num", "line_num", "word_num", "conf", "text", "left", "width", "top", "height"]]
     df = df[df["conf"] > 0]
@@ -81,19 +89,8 @@ def receipt_ocr(image):
     return df
 
 
-def remove_noise(image):
-    return cv2.medianBlur(image, 5)
-
-
-def parse_start(line, df_line):
-    for index, row in df_line.iterrows():  # Loop over words
-        if row["text"].upper() == "AANTAL" or row["text"].upper() == "OMSCHRIJVING" or row["text"].upper() == "PRIJS" or row["text"].upper() == "BEDRAG":
-            return "parse_items"
-    return "start"
-
-
 def ah_price(price):
-    """Format prices from AH supermarket"""
+    """Format prices from AH supermarket."""
     price = price.replace(",", ".")
     if "." not in price:
         price = f"{price[0:-2]}.{price[-2:]}"  # Insert decimal before the last 2 digits if not present
@@ -102,7 +99,16 @@ def ah_price(price):
     return price.quantize(cents, decimal.ROUND_HALF_UP)
 
 
+def parse_start(line, df_line):
+    """Check if the line of the receipt is the start of the item table. Returns what to do with the next line."""
+    for index, row in df_line.iterrows():  # Loop over words
+        if row["text"].upper() == "AANTAL" or row["text"].upper() == "OMSCHRIJVING" or row["text"].upper() == "PRIJS" or row["text"].upper() == "BEDRAG":
+            return "parse_items"
+    return "start"
+
+
 def parse_items(bonuskaart_skip, line, df_line, receipt):
+    """Parse shopping items from the receipt."""
     # Check for bonuskaart line
     if bonuskaart_skip == False:
         for index, row in df_line.iterrows():  # Loop over words
@@ -147,6 +153,7 @@ def parse_items(bonuskaart_skip, line, df_line, receipt):
 
 
 def parse_bonus(line, df_line, receipt):
+    """Parse bonus items from the receipt."""
     # Check for bonus total
     for index, row in df_line.iterrows():  # Loop over words
         if row["text"].upper() == "VOORDEEL":
@@ -163,6 +170,7 @@ def parse_bonus(line, df_line, receipt):
 
 
 def parse_total(line, df_line, receipt):
+    """Parse total from receipt."""
     for index, row in df_line.iterrows():  # Loop over words
         if row["text"].upper() == "TOTAAL":
             receipt.total = ah_price(df_line.iloc[-1]["text"])
@@ -170,14 +178,13 @@ def parse_total(line, df_line, receipt):
             return "end", receipt
     return "parse_total", receipt
 
-def main():
-    # Variables
-    pdf_path = "test_data/input_pdf/ah_02.pdf"
 
+def process_receipt(pdf, supermarket, participants):
+    """Parse a receipt pdf and return a Receipt object with all information."""
     # Create instance of receipt
-    receipt = Receipt(supermarket="AH", participants=["Alice", "Bob"])
+    receipt = Receipt(supermarket=supermarket, participants=participants)
     # Read receipt
-    image = img_from_pdf(pdf_path)
+    image = img_from_pdf(pdf)
     df = receipt_ocr(image)
 
     parse_stage = "start"
@@ -198,5 +205,15 @@ def main():
     return receipt
 
 
+def main():
+    # Test run variables
+    pdf_path = "test_data/ah_02.pdf"
+    participants = ["Alice", "Bob"]
+    supermarket = "AH"
+    receipt = process_receipt(pdf_path, supermarket, participants)
+    return receipt
+
+
 if __name__ == "__main__":
     receipt = main()
+
