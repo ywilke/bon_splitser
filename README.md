@@ -3,8 +3,9 @@ This tool allows you to split a receipt from the Albert Heijn supermarket across
 
 ## Installation
 1. Install Tesseract OCR 5.x (for windows use https://digi.bib.uni-mannheim.de/tesseract/)
-2. Download "nld.traineddata" from https://github.com/tesseract-ocr/tessdata. Place the file in Tesseract-OCR\tessdata
-3. Install python packages from "requirements.txt"
+2. Add Tesseract to Path
+3. Download "nld.traineddata" from https://github.com/tesseract-ocr/tessdata. Place the file in Tesseract-OCR\tessdata
+4. Install python packages from "requirements.txt"
 
 ## Usage
 1. Clone project and cd to project dir
